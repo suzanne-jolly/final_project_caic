@@ -1,4 +1,9 @@
+from flask import Flask, request, jsonify
+from flask_cors import CORS
 import random
+
+app = Flask(__name__)
+CORS(app)
 
 class SimpleTweetGenerator:
     def __init__(self):
@@ -7,16 +12,15 @@ class SimpleTweetGenerator:
             "Big news from {company} today in {industry}: {message}"
         ]
         self.negative_templates = [
-            "Rough patch for {company} in {industry} sector.{message} 😟",
-            "{company} is facing criticism in the {industry} space.{message}"
+            "Rough patch for {company} in {industry} sector. {message} 😟",
+            "{company} is facing criticism in the {industry} space. {message}"
         ]
         self.neutral_templates = [
-            "{company} shares updates on {industry}.{message}",
-            "Steady progress from {company} in {industry}.{message}"
+            "{company} shares updates on {industry}. {message}",
+            "Steady progress from {company} in {industry}. {message}"
         ]
 
     def generate_smart_tweet(self, company, industry, word_count, sentiment_target, has_media, message):
-        
         if sentiment_target > 0.5:
             templates = self.positive_templates
         elif sentiment_target < -0.5:
@@ -24,15 +28,36 @@ class SimpleTweetGenerator:
         else:
             templates = self.neutral_templates
 
-        
-        base_tweet = random.choice(templates).format(company=company, industry=industry, message= message)
-        words = base_tweet.split()
+        base_tweet = random.choice(templates).format(company=company, industry=industry, message=message)
+        tweet = " ".join(base_tweet.split())
 
-      
-        tweet = " ".join(words)
-
-       
         if has_media:
             tweet += " 📸"
 
-        return tweet[:280] 
+        return tweet[:280]
+
+# Instantiate your class
+tweet_generator = SimpleTweetGenerator()
+
+@app.route('/generate_smart_tweet', methods=['POST'])
+def generate_tweet():
+    try:
+        data = request.get_json()
+        company = data.get("company")
+        industry = data.get("industry")
+        word_count = int(data.get("word_count", 20))
+        sentiment_target = float(data.get("sentiment_target", 0))
+        has_media = data.get("has_media", False)
+        message = data.get("message", "")
+
+        tweet = tweet_generator.generate_smart_tweet(
+            company, industry, word_count, sentiment_target, has_media, message
+        )
+
+        return jsonify({"tweet": tweet})
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+if __name__ == '__main__':
+    app.run(debug=True, port=5000)
