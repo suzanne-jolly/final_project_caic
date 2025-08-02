@@ -64,7 +64,7 @@ if submitted:
     }
 
     
-    gen_resp = requests.post("http://localhost:5001/generate_smart_tweet", json=gen_payload)
+    gen_resp = requests.post("https://tweetalyst.onrender.com/", json=gen_payload)
     if gen_resp.ok and "generated_tweet" in gen_resp.json():
         generated_tweet = gen_resp.json()["generated_tweet"]
         st.markdown(f"**Generated Tweet:**\n\n{generated_tweet}")
@@ -95,10 +95,11 @@ if submitted:
     }
 
     
-    pred_resp = requests.post("http://localhost:5000/predict", json=pred_payload)
+    pred_resp = requests.post("https://tweetalyst.onrender.com/", json=pred_payload)
     if pred_resp.ok and "predicted_likes" in pred_resp.json():
         predicted_likes = pred_resp.json()["predicted_likes"]
         st.success(f"Predicted Likes: **{predicted_likes}**")
     else:
         st.error("Failed to predict likes.")
         st.text(pred_resp.text)
+
