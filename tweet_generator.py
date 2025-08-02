@@ -59,5 +59,33 @@ def generate_tweet():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+
+le_company = joblib.load('company_encoder.pkl')
+
+
+
+model = joblib.load('like_predictor.pkl')
+
+
+@app.route('/predict_likes', methods=['POST'])
+
+def predict():
+    data = request.get_json()
+    features = np.array([
+        data['word_count'],
+        data['char_count'],
+        data['has_media'],
+        data['hour'],
+        data['sentiment'],
+        data['company_encoded'],
+        
+        data['day_of_week'],
+    ]).reshape(1, -1)
+
+    prediction_log = model.predict(features)[0]
+    prediction = round(np.expm1(prediction_log))
+    return jsonify({'predicted_likes': int(prediction)})
+
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
+
